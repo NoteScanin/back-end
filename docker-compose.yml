@@ -1,0 +1,21 @@
+version: '3.8'
+services:
+  backend:
+    build: .
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./storage:/app/storage
+      - ./data:/app/data
+    environment:
+      - AI_SERVICE_URL=http://ai:8000
+    depends_on:
+      - ai
+
+  ai:
+    build:
+      context: ../ai
+    ports:
+      - "8000:8000"
+    volumes:
+      - ../ai:/app:ro

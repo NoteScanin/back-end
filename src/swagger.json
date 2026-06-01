@@ -1,0 +1,31 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "NoteScanin API",
+    "version": "0.1.0"
+  },
+  "paths": {
+    "/health": {
+      "get": {
+        "summary": "Health check",
+        "responses": {"200": {"description": "OK"}}
+      }
+    },
+    "/api/v1/notes/upload": {
+      "post": {
+        "summary": "Upload note image",
+        "requestBody": {"content": {"multipart/form-data": {}}},
+        "responses": {"200": {"description": "Uploaded"}}
+      }
+    },
+    "/api/v1/notes": {
+      "get": {"summary": "List notes","responses": {"200": {"description": "OK"}}}
+    },
+    "/api/v1/ocr/process/{noteId}": {
+      "post": {"summary": "Start OCR job","parameters": [{"name":"noteId","in":"path","required":true,"schema":{"type":"string"}}],"responses": {"200": {"description": "Job started"}}}
+    },
+    "/api/v1/pdf/generate/{jobId}": {
+      "post": {"summary": "Generate PDF","parameters": [{"name":"jobId","in":"path","required":true,"schema":{"type":"string"}}],"responses": {"200": {"description": "PDF created"}}}
+    }
+  }
+}
