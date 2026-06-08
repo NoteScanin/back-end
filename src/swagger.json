@@ -2,7 +2,8 @@
   "openapi": "3.0.0",
   "info": {
     "title": "NoteScanin API",
-    "version": "0.1.0"
+    "version": "0.1.0",
+    "description": "Standard response envelope: success/data for success responses, error/error_details for failures."
   },
   "paths": {
     "/health": {
