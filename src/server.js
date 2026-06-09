@@ -1,8 +1,13 @@
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
 const fs = require('fs');
 
+// Initialize database (creates tables if needed)
+require('./db/database');
+
+const authRouter = require('./routes/auth');
 const notesRouter = require('./routes/notes');
 const ocrRouter = require('./routes/ocr');
 const pdfRouter = require('./routes/pdf');
@@ -14,10 +19,25 @@ const { ROOT_STORAGE_DIR, ensureStorageDirs } = require('./utils/paths');
 ensureStorageDirs();
 
 const app = express();
-app.use(cors());
+
+// CORS configuration — allow frontend dev server
+app.use(cors({
+  origin: [
+    'http://localhost:3000',
+    'http://localhost:3001',
+    'http://localhost:3002',
+    'http://localhost:3003',
+    'http://localhost:3005',
+    process.env.FRONTEND_URL,
+  ].filter(Boolean),
+  credentials: true,
+}));
+
 app.use(express.json());
 app.use('/storage', express.static(ROOT_STORAGE_DIR));
 
+// Routes
+app.use('/api/v1/auth', authRouter);
 app.use('/api/v1/notes', notesRouter);
 app.use('/api/v1/ocr', ocrRouter);
 app.use('/api/v1/pdf', pdfRouter);
@@ -72,7 +92,9 @@ app.use((err, req, res, next) => {
   });
 });
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
   console.log(`NoteScanin backend listening on port ${PORT}`);
+  console.log(`Database: SQLite (data/scanin.db)`);
+  console.log(`Auth: JWT + Google OAuth`);
 });

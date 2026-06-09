@@ -3,10 +3,11 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 const { v4: uuidv4 } = require('uuid');
-const { readJSON, writeJSON } = require('../utils/dataStore');
+const { stmts } = require('../db/database');
 const { NOTES_STORAGE_DIR } = require('../utils/paths');
 const { sendCreated, sendSuccess, badRequest, notFound } = require('../utils/apiResponse');
 const { isImageUpload } = require('../utils/validators');
+const { requireAuth } = require('../middleware/auth');
 
 const router = express.Router();
 
@@ -29,45 +30,44 @@ const upload = multer({
   },
 });
 
+// All routes require authentication
+router.use(requireAuth);
+
 router.post('/upload', upload.single('file'), (req, res) => {
   if (!req.file) return badRequest(res, 'file required');
-  const notes = readJSON('notes.json', []);
+
   const id = uuidv4();
-  const item = {
-    id,
-    file_name: req.file.originalname,
-    image_path: `/storage/notes/${path.basename(req.file.path)}`,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString()
-  };
-  notes.push(item);
-  writeJSON('notes.json', notes);
+  const now = new Date().toISOString();
+  const imagePath = `/storage/notes/${path.basename(req.file.path)}`;
+
+  stmts.insertNote.run(id, req.user.id, req.file.originalname, imagePath, now, now);
+
+  const item = stmts.findNoteById.get(id);
   sendCreated(res, item);
 });
 
 router.get('/', (req, res) => {
-  const notes = readJSON('notes.json', []);
+  const notes = stmts.findNotesByUser.all(req.user.id);
+  const countResult = stmts.countNotesByUser.get(req.user.id);
   sendSuccess(res, {
     items: notes,
     count: notes.length,
-    total: notes.length,
+    total: countResult.count,
   });
 });
 
 router.get('/:id', (req, res) => {
-  const notes = readJSON('notes.json', []);
-  const n = notes.find(x => x.id === req.params.id);
-  if (!n) return notFound(res);
-  sendSuccess(res, n);
+  const note = stmts.findNoteByIdAndUser.get(req.params.id, req.user.id);
+  if (!note) return notFound(res);
+  sendSuccess(res, note);
 });
 
 router.delete('/:id', (req, res) => {
-  let notes = readJSON('notes.json', []);
-  const idx = notes.findIndex(x => x.id === req.params.id);
-  if (idx === -1) return notFound(res);
-  const [deleted] = notes.splice(idx, 1);
-  writeJSON('notes.json', notes);
-  sendSuccess(res, { deleted });
+  const note = stmts.findNoteByIdAndUser.get(req.params.id, req.user.id);
+  if (!note) return notFound(res);
+
+  stmts.deleteNote.run(req.params.id, req.user.id);
+  sendSuccess(res, { deleted: note });
 });
 
 module.exports = router;
