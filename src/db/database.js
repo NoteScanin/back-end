@@ -57,6 +57,14 @@ db.exec(`
     updated_at TEXT NOT NULL,
     FOREIGN KEY (job_id) REFERENCES jobs(id) ON DELETE CASCADE
   );
+
+  CREATE TABLE IF NOT EXISTS pdfs (
+    id TEXT PRIMARY KEY,
+    result_id TEXT NOT NULL,
+    file_path TEXT NOT NULL,
+    created_at TEXT NOT NULL,
+    FOREIGN KEY (result_id) REFERENCES results(id) ON DELETE CASCADE
+  );
 `);
 
 // Create indexes for common lookups
@@ -66,6 +74,7 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS idx_results_job_id ON results(job_id);
   CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
   CREATE INDEX IF NOT EXISTS idx_users_google_id ON users(google_id);
+  CREATE INDEX IF NOT EXISTS idx_pdfs_result_id ON pdfs(result_id);
 `);
 
 // ---------- Prepared statements ----------
@@ -109,6 +118,13 @@ const stmts = {
     VALUES (?, ?, ?, ?, ?, ?, ?)
   `),
   findResultByJobId: db.prepare('SELECT * FROM results WHERE job_id = ?'),
+
+  // Pdfs
+  insertPdf: db.prepare(`
+    INSERT INTO pdfs (id, result_id, file_path, created_at)
+    VALUES (?, ?, ?, ?)
+  `),
+  findPdfById: db.prepare('SELECT * FROM pdfs WHERE id = ?'),
 };
 
 module.exports = { db, stmts };

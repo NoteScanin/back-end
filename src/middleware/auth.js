@@ -18,16 +18,22 @@ function generateToken(user) {
  * Express middleware – verifies JWT and attaches req.user.
  */
 function requireAuth(req, res, next) {
+  let token = null;
+  
   const authHeader = req.headers.authorization;
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    token = authHeader.split(' ')[1];
+  } else if (req.query.token) {
+    token = req.query.token;
+  }
+
+  if (!token) {
     return res.status(401).json({
       success: false,
       error: 'unauthorized',
       error_details: { message: 'Token tidak ditemukan. Silakan login.' },
     });
   }
-
-  const token = authHeader.split(' ')[1];
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
     const user = stmts.findUserById.get(decoded.id);
@@ -55,10 +61,15 @@ function requireAuth(req, res, next) {
  * Optional auth — if token is present, attach user; otherwise continue.
  */
 function optionalAuth(req, res, next) {
+  let token = null;
   const authHeader = req.headers.authorization;
-  if (!authHeader || !authHeader.startsWith('Bearer ')) return next();
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    token = authHeader.split(' ')[1];
+  } else if (req.query.token) {
+    token = req.query.token;
+  }
 
-  const token = authHeader.split(' ')[1];
+  if (!token) return next();
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
     const user = stmts.findUserById.get(decoded.id);

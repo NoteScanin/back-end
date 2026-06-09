@@ -12,9 +12,10 @@ async function runStubOcr(noteId, fileName) {
 }
 
 async function runAiOcr(imagePath, fileName, noteId = fileName) {
-  const fullPath = path.isAbsolute(imagePath)
-    ? imagePath
-    : path.join(__dirname, '..', '..', imagePath.replace(/^\//, ''));
+  const normalizedPath = imagePath.startsWith('/storage') ? imagePath.replace(/^\//, '') : imagePath;
+  const fullPath = path.isAbsolute(normalizedPath)
+    ? normalizedPath
+    : path.join(__dirname, '..', '..', normalizedPath);
 
   if (!fs.existsSync(fullPath)) {
     throw new Error(`Note file not found: ${fullPath}`);
@@ -25,8 +26,9 @@ async function runAiOcr(imagePath, fileName, noteId = fileName) {
   }
 
   const form = new FormData();
-  const fileStream = fs.createReadStream(fullPath);
-  form.append('file', fileStream, fileName || path.basename(fullPath));
+  const fileBuffer = fs.readFileSync(fullPath);
+  const blob = new Blob([fileBuffer], { type: 'application/octet-stream' });
+  form.append('file', blob, fileName || path.basename(fullPath));
 
   const response = await fetch(`${AI_SERVICE_URL.replace(/\/$/, '')}/ocr`, {
     method: 'POST',
