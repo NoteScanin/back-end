@@ -121,7 +121,13 @@ router.get('/jobs/:jobId/stream', (req, res) => {
   res.write('\n');
   sseClients.set(jobId, res);
 
+  // Send a ping every 15 seconds to keep the connection alive (prevent Railway/browser timeouts)
+  const keepAlive = setInterval(() => {
+    res.write(': ping\n\n');
+  }, 15000);
+
   req.on('close', () => {
+    clearInterval(keepAlive);
     sseClients.delete(jobId);
   });
 });
