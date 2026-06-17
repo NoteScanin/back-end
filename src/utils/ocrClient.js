@@ -1,5 +1,6 @@
 const fs = require('node:fs');
 const path = require('node:path');
+const { ROOT_STORAGE_DIR } = require('./paths');
 
 const AI_SERVICE_URL = process.env.AI_SERVICE_URL || '';
 
@@ -12,10 +13,15 @@ async function runStubOcr(noteId, fileName) {
 }
 
 async function runAiOcr(imagePath, fileName, noteId = fileName) {
-  const normalizedPath = imagePath.startsWith('/storage') ? imagePath.replace(/^\//, '') : imagePath;
-  const fullPath = path.isAbsolute(normalizedPath)
-    ? normalizedPath
-    : path.join(__dirname, '..', '..', normalizedPath);
+  let fullPath;
+  if (imagePath.startsWith('/storage/')) {
+    const relativePath = imagePath.replace(/^\/storage\//, '');
+    fullPath = path.join(ROOT_STORAGE_DIR, relativePath);
+  } else {
+    fullPath = path.isAbsolute(imagePath)
+      ? imagePath
+      : path.join(__dirname, '..', '..', imagePath);
+  }
 
   if (!fs.existsSync(fullPath)) {
     throw new Error(`Note file not found: ${fullPath}`);
