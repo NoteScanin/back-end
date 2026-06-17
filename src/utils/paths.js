@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const ROOT_STORAGE_DIR = path.join(__dirname, '..', '..', 'storage');
+const ROOT_STORAGE_DIR = path.join(__dirname, '..', '..', 'data', 'storage');
 const NOTES_STORAGE_DIR = path.join(ROOT_STORAGE_DIR, 'notes');
 const PDF_STORAGE_DIR = path.join(ROOT_STORAGE_DIR, 'pdfs');
 
