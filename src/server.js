@@ -20,7 +20,12 @@ ensureStorageDirs();
 
 const app = express();
 
-// CORS configuration — allow frontend dev server
+// Parsing jika ada banyak domain, pisahkan dengan koma di Railway env var
+const frontendUrls = process.env.FRONTEND_URL 
+  ? process.env.FRONTEND_URL.split(',').map(url => url.trim()) 
+  : [];
+
+// CORS configuration — allow frontend dev server and production domains
 app.use(cors({
   origin: [
     'http://localhost:3000',
@@ -28,7 +33,10 @@ app.use(cors({
     'http://localhost:3002',
     'http://localhost:3003',
     'http://localhost:3005',
-    process.env.FRONTEND_URL,
+    'https://note-scanin.vercel.app', // Domain bawaan vercel
+    'https://notescanin.web.id',      // Domain custom utama
+    'https://www.notescanin.web.id',  // Domain custom dengan www
+    ...frontendUrls,
   ].filter(Boolean),
   credentials: true,
 }));
